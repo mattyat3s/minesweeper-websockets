@@ -1,0 +1,66 @@
+<html>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<head>
+		<link href="reset.css" rel="stylesheet">
+	  <link href="style.css" rel="stylesheet">
+		<script src="cell.js"></script>
+		<script src="game.js"></script>
+	</head>
+	<body>
+		<input type="text" id="gameID">
+		<div id="joinGame">Join Game</div>
+		<div id="newGame">New Game</div>
+		<div id="game"></div>
+		<script>
+			var mobile = "ontouchend" in document;
+			var gameID = document.getElementById("gameID");
+			var joinGame = document.getElementById("joinGame");
+			var newGame = document.getElementById("newGame");
+			var game = null;
+
+			function StartGame() {
+				if (game !== null) {
+					game.webSocket.close();
+				}
+				game = new Game({
+					"url"       : "localhost:4000",
+					"elementID"	: "game",
+					"gridSize" 	: 10,
+					"bees"			: 10,
+					"gameID"		: gameID.value
+				});
+			}
+
+			function handleVisibilityChange() {
+				// on an iphone the websoket is closed when not visibile
+				// so when the screen becomes visible it checks to see if the connection is closed (3)
+				// if it is closed it's an iphone
+				// plus the game needs to be restarted
+				// this extra check stops the same thing happening on the desktop
+			  if (document.hidden == false && game.webSocket.readyState == 3) {
+			    StartGame();
+			  }
+			}
+
+			if (window.location.pathname !== "/") {
+		    gameID.value = window.location.pathname.split("/")[1];
+				StartGame();
+		  }
+
+			if (mobile) {
+				joinGame.ontouchend = StartGame;
+				newGame.ontouchend = function() {
+					gameID.value = "";
+					StartGame();
+				};
+			} else {
+			  joinGame.onmouseup = StartGame;
+				newGame.onmouseup = function() {
+					gameID.value = "";
+					StartGame();
+				};
+			}
+			document.addEventListener("visibilitychange", handleVisibilityChange, false);
+		</script>
+	</body>
+</html>
